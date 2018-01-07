@@ -25,7 +25,8 @@ FPFLAGS = -mfloat-abi=hard -mfpu=fpv4-sp-d16
 # Black Magic Probe setup (optional):
 #BLACKMAGIC_PORT = /dev/ttyACM0
 
-include ../lib/cm-makefile/common.mk
+include ../lib/cm-makefile/config.mk
 include ../lib/cm-makefile/blackmagic.mk
 include ../lib/cm-makefile/libopencm3.mk    # Builds libopencm3
 include ../lib/cm-makefile/libopencm3_ld.mk # Generates linker script
+include ../lib/cm-makefile/rules.mk
