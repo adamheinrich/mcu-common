@@ -1,0 +1,6 @@
+[submodule "examples/lib/cm-makefile"]
+	path = examples/lib/cm-makefile
+	url = https://github.com/adamheinrich/cm-makefile.git
+[submodule "examples/lib/libopencm3"]
+	path = examples/lib/libopencm3
+	url = https://github.com/libopencm3/libopencm3.git
