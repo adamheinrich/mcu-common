@@ -58,15 +58,15 @@ int fifo_read(struct fifo *fifo, void *dst, int count)
 	CRITICAL_ENTER();
 
 	for (num_read = 0; num_read < count; num_read++) {
-		int next_tail = fifo->tail+1;
+		size_t next_tail = fifo->tail+1;
 		if (next_tail >= fifo->capacity)
 			next_tail = 0;
 
 		if (fifo->tail == fifo->head) {
 			break;
 		} else {
-			int i = fifo->tail * (int)fifo->element_size;
-			for (int j = 0; j < (int)fifo->element_size; j++)
+			size_t i = fifo->tail * fifo->element_size;
+			for (size_t j = 0; j < fifo->element_size; j++)
 				*(dst_ptr++) = src_ptr[i+j];
 
 			fifo->tail = next_tail;
@@ -90,15 +90,15 @@ int fifo_write(struct fifo *fifo, const void *src, int count)
 	CRITICAL_ENTER();
 
 	for (num_written = 0; num_written < count; num_written++) {
-		int next_head = fifo->head+1;
+		size_t next_head = fifo->head+1;
 		if (next_head >= fifo->capacity)
 			next_head = 0;
 
 		if (next_head == fifo->tail) {
 			break;
 		} else {
-			int i = fifo->head * (int)fifo->element_size;
-			for (int j = 0; j < (int)fifo->element_size; j++)
+			size_t i = fifo->head * fifo->element_size;
+			for (size_t j = 0; j < fifo->element_size; j++)
 				dst_ptr[i+j] = *(src_ptr++);
 
 			fifo->head = next_head;

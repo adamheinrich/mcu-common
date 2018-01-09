@@ -50,9 +50,9 @@ extern "C" {
 struct fifo {
 	volatile void *buffer;
 	size_t element_size;
-	int capacity;
-	volatile int tail;
-	volatile int head;
+	size_t capacity;
+	volatile size_t tail;
+	volatile size_t head;
 };
 
 bool fifo_init(struct fifo *fifo);

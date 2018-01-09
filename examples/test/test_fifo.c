@@ -39,13 +39,13 @@ static bool test_fifo_char(void)
 	struct fifo fifo;
 	FIFO_INIT(&fifo, sizeof(char), 10);
 
-	for (char i = 0; i < fifo.capacity-1; i++)
+	for (char i = 0; i < (char)fifo.capacity-1; i++)
 		TEST_ASSERT(fifo_write(&fifo, &i, 1) == 1);
 
 	char val = 42;
 	TEST_ASSERT(fifo_write(&fifo, &val, 1) == 0);
 
-	for (char i = 0; i < fifo.capacity-1; i++) {
+	for (char i = 0; i < (char)fifo.capacity-1; i++) {
 		TEST_ASSERT(fifo_read(&fifo, &val, 1) == 1);
 		TEST_ASSERT(val == i);
 	}
@@ -61,7 +61,7 @@ static bool test_fifo_uint64(void)
 	struct fifo fifo;
 	FIFO_INIT(&fifo, sizeof(uint64_t), 48);
 
-	for (int i = 0; i < fifo.capacity-1; i++) {
+	for (size_t i = 0; i < fifo.capacity-1; i++) {
 		val = (1UL << i);
 		TEST_ASSERT(fifo_write(&fifo, &val, 1) == 1);
 	}
@@ -69,7 +69,7 @@ static bool test_fifo_uint64(void)
 	val = 0;
 	TEST_ASSERT(fifo_write(&fifo, &val, 1) == 0);
 
-	for (int i = 0; i < fifo.capacity-1; i++) {
+	for (size_t i = 0; i < fifo.capacity-1; i++) {
 		TEST_ASSERT(fifo_read(&fifo, &val, 1) == 1);
 		TEST_ASSERT(val == (1UL << i));
 	}
