@@ -53,6 +53,8 @@ struct fifo {
 	size_t capacity;
 	volatile size_t tail;
 	volatile size_t head;
+	volatile bool full;
+	volatile bool empty;
 };
 
 bool fifo_init(struct fifo *fifo);

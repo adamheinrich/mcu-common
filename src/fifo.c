@@ -33,15 +33,14 @@
 #include <mcu-common/fifo.h>
 #include <mcu-common/critical.h>
 
-/* TODO: This implementation wastes one element, change it.
-   It is currently only possible to write (capacity-1) elements. */
-
 bool fifo_init(struct fifo *fifo)
 {
 	assert(fifo != NULL);
 
 	fifo->head = 0;
 	fifo->tail = 0;
+	fifo->full = false;
+	fifo->empty = true;
 
 	return true;
 }
@@ -51,31 +50,32 @@ int fifo_read(struct fifo *fifo, void *dst, int count)
 	assert(fifo != NULL);
 	assert(dst != NULL);
 
-	int num_read;
-	char *dst_ptr = dst;
-	volatile const char *src_ptr = fifo->buffer;
+	int n = 0;
 
 	CRITICAL_ENTER();
 
-	for (num_read = 0; num_read < count; num_read++) {
-		size_t next_tail = fifo->tail+1;
-		if (next_tail >= fifo->capacity)
-			next_tail = 0;
+	if (!fifo->empty) {
+		char *dst_ptr = dst;
+		volatile const char *src_ptr = fifo->buffer;
+		fifo->full = false;
 
-		if (fifo->tail == fifo->head) {
-			break;
-		} else {
+		for ( ; (n < count && !fifo->empty); n++) {
 			size_t i = fifo->tail * fifo->element_size;
 			for (size_t j = 0; j < fifo->element_size; j++)
 				*(dst_ptr++) = src_ptr[i+j];
 
-			fifo->tail = next_tail;
+			fifo->tail++;
+			if (fifo->tail >= fifo->capacity)
+				fifo->tail = 0;
+
+			if (fifo->tail == fifo->head)
+				fifo->empty = true;
 		}
 	}
 
 	CRITICAL_EXIT();
 
-	return num_read;
+	return n;
 }
 
 int fifo_write(struct fifo *fifo, const void *src, int count)
@@ -83,29 +83,30 @@ int fifo_write(struct fifo *fifo, const void *src, int count)
 	assert(fifo != NULL);
 	assert(src != NULL);
 
-	int num_written;
-	const char *src_ptr = src;
-	volatile char *dst_ptr = fifo->buffer;
+	int n = 0;
 
 	CRITICAL_ENTER();
 
-	for (num_written = 0; num_written < count; num_written++) {
-		size_t next_head = fifo->head+1;
-		if (next_head >= fifo->capacity)
-			next_head = 0;
+	if (!fifo->full) {
+		const char *src_ptr = src;
+		volatile char *dst_ptr = fifo->buffer;
+		fifo->empty = false;
 
-		if (next_head == fifo->tail) {
-			break;
-		} else {
+		for ( ; (n < count && !fifo->full); n++) {
 			size_t i = fifo->head * fifo->element_size;
 			for (size_t j = 0; j < fifo->element_size; j++)
 				dst_ptr[i+j] = *(src_ptr++);
 
-			fifo->head = next_head;
+			fifo->head++;
+			if (fifo->head >= fifo->capacity)
+				fifo->head = 0;
+
+			if (fifo->head == fifo->tail)
+				fifo->full = true;
 		}
 	}
 
 	CRITICAL_EXIT();
 
-	return num_written;
+	return n;
 }

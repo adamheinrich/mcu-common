@@ -39,13 +39,14 @@ static bool test_fifo_char(void)
 	struct fifo fifo;
 	FIFO_INIT(&fifo, sizeof(char), 10);
 
-	for (char i = 0; i < (char)fifo.capacity-1; i++)
+	for (char i = 0; i < (char)fifo.capacity; i++) {
 		TEST_ASSERT(fifo_write(&fifo, &i, 1) == 1);
+	}
 
 	char val = 42;
 	TEST_ASSERT(fifo_write(&fifo, &val, 1) == 0);
 
-	for (char i = 0; i < (char)fifo.capacity-1; i++) {
+	for (char i = 0; i < (char)fifo.capacity; i++) {
 		TEST_ASSERT(fifo_read(&fifo, &val, 1) == 1);
 		TEST_ASSERT(val == i);
 	}
@@ -61,7 +62,7 @@ static bool test_fifo_uint64(void)
 	struct fifo fifo;
 	FIFO_INIT(&fifo, sizeof(uint64_t), 48);
 
-	for (size_t i = 0; i < fifo.capacity-1; i++) {
+	for (size_t i = 0; i < fifo.capacity; i++) {
 		val = (1UL << i);
 		TEST_ASSERT(fifo_write(&fifo, &val, 1) == 1);
 	}
@@ -69,7 +70,7 @@ static bool test_fifo_uint64(void)
 	val = 0;
 	TEST_ASSERT(fifo_write(&fifo, &val, 1) == 0);
 
-	for (size_t i = 0; i < fifo.capacity-1; i++) {
+	for (size_t i = 0; i < fifo.capacity; i++) {
 		TEST_ASSERT(fifo_read(&fifo, &val, 1) == 1);
 		TEST_ASSERT(val == (1UL << i));
 	}
@@ -87,20 +88,21 @@ static bool test_fifo_operations(void)
 
 	FIFO_INIT(&fifo, sizeof(int), 5);
 
-	TEST_ASSERT(fifo_write(&fifo, in, 5) == 4); /* buffer: { 1, 2, 3, 4 } */
+	TEST_ASSERT(fifo_write(&fifo, in, 5) == 5); /* fifo: { 1, 2, 3, 4, 5 }*/
 
-	TEST_ASSERT(fifo_read(&fifo, out, 3) == 3); /* buffer: { 4 } */
+	TEST_ASSERT(fifo_read(&fifo, out, 3) == 3); /* fifo: { 4, 5 } */
 	TEST_ASSERT(out[0] == 1);
 	TEST_ASSERT(out[1] == 2);
 	TEST_ASSERT(out[2] == 3);
 
-	TEST_ASSERT(fifo_write(&fifo, in, 5) == 3); /* buffer: { 4, 1, 2, 3 } */
+	TEST_ASSERT(fifo_write(&fifo, in, 5) == 3); /* fifo: { 4, 5, 1, 2, 3 }*/
 
-	TEST_ASSERT(fifo_read(&fifo, out, 5) == 4); /* buffer: { } */
+	TEST_ASSERT(fifo_read(&fifo, out, 5) == 5); /* fifo: { } */
 	TEST_ASSERT(out[0] == 4);
-	TEST_ASSERT(out[1] == 1);
-	TEST_ASSERT(out[2] == 2);
-	TEST_ASSERT(out[3] == 3);
+	TEST_ASSERT(out[1] == 5);
+	TEST_ASSERT(out[2] == 1);
+	TEST_ASSERT(out[3] == 2);
+	TEST_ASSERT(out[4] == 3);
 
 	TEST_ASSERT(fifo_read(&fifo, out, 5) == 0);
 
