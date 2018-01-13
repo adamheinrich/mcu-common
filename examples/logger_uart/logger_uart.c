@@ -31,6 +31,7 @@
 
 #include "logger_uart.h"
 #include <mcu-common/logger.h>
+#include <mcu-common/critical.h>
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
@@ -88,6 +89,8 @@ static int uart_write(const char *str, size_t length)
 	if (str == NULL || length == 0)
 		return 0;
 
+	CRITICAL_ENTER();
+
 	if (tx_pending) {
 		fifo_write(&tx_fifo, str, (int)length);
 	} else {
@@ -97,6 +100,8 @@ static int uart_write(const char *str, size_t length)
 		usart_send(USART2, str[0]);
 		usart_enable_tx_interrupt(USART2);
 	}
+
+	CRITICAL_EXIT();
 
 	return (int)length;
 }
