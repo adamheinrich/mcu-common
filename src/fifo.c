@@ -50,28 +50,26 @@ int fifo_read(struct fifo *fifo, void *dst, int count)
 	assert(fifo != NULL);
 	assert(dst != NULL);
 
-	int n = 0;
+	int n;
+	char *ptr = dst;
 
 	CRITICAL_ENTER();
 
-	if (!fifo->empty) {
-		char *dst_ptr = dst;
-		volatile const char *src_ptr = fifo->buffer;
-		fifo->full = false;
+	for (n = 0; (n < count && !fifo->empty); n++) {
+		size_t i = fifo->tail * fifo->element_size;
+		for (size_t j = 0; j < fifo->element_size; j++)
+			*(ptr++) = ((char *)fifo->buffer)[i+j];
 
-		for ( ; (n < count && !fifo->empty); n++) {
-			size_t i = fifo->tail * fifo->element_size;
-			for (size_t j = 0; j < fifo->element_size; j++)
-				*(dst_ptr++) = src_ptr[i+j];
+		fifo->tail++;
+		if (fifo->tail >= fifo->capacity)
+			fifo->tail = 0;
 
-			fifo->tail++;
-			if (fifo->tail >= fifo->capacity)
-				fifo->tail = 0;
-
-			if (fifo->tail == fifo->head)
-				fifo->empty = true;
-		}
+		if (fifo->tail == fifo->head)
+			fifo->empty = true;
 	}
+
+	if (n > 0)
+		fifo->full = false;
 
 	CRITICAL_EXIT();
 
@@ -83,28 +81,26 @@ int fifo_write(struct fifo *fifo, const void *src, int count)
 	assert(fifo != NULL);
 	assert(src != NULL);
 
-	int n = 0;
+	int n;
+	const char *ptr = src;
 
 	CRITICAL_ENTER();
 
-	if (!fifo->full) {
-		const char *src_ptr = src;
-		volatile char *dst_ptr = fifo->buffer;
-		fifo->empty = false;
+	for (n = 0; (n < count && !fifo->full); n++) {
+		size_t i = fifo->head * fifo->element_size;
+		for (size_t j = 0; j < fifo->element_size; j++)
+			((char *)fifo->buffer)[i+j] = *(ptr++);
 
-		for ( ; (n < count && !fifo->full); n++) {
-			size_t i = fifo->head * fifo->element_size;
-			for (size_t j = 0; j < fifo->element_size; j++)
-				dst_ptr[i+j] = *(src_ptr++);
+		fifo->head++;
+		if (fifo->head >= fifo->capacity)
+			fifo->head = 0;
 
-			fifo->head++;
-			if (fifo->head >= fifo->capacity)
-				fifo->head = 0;
-
-			if (fifo->head == fifo->tail)
-				fifo->full = true;
-		}
+		if (fifo->head == fifo->tail)
+			fifo->full = true;
 	}
+
+	if (n > 0)
+		fifo->empty = false;
 
 	CRITICAL_EXIT();
 
