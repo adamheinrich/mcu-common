@@ -1,4 +1,4 @@
-DIRS := test logger_uart
+DIRS := test logger_uart logger_assert
 
 DIRS := $(addprefix examples/,$(DIRS))
 
