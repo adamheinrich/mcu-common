@@ -51,6 +51,15 @@ void __assert_func(const char *file, int line, const char *func,
 	}
 }
 
+void sys_tick_handler(void)
+{
+	static unsigned int i;
+
+	gpio_toggle(GPIOA, GPIO8);
+	LOG("%s(): i=%d\n", __func__, i);
+	i++;
+}
+
 int main(void)
 {
 	rcc_clock_setup_hse_3v3(&rcc_hse_25mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
@@ -60,16 +69,29 @@ int main(void)
 	gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO8);
 	gpio_clear(GPIOA, GPIO8);
 
+	systick_clear();
+	systick_set_reload(rcc_ahb_frequency / 50);
+	systick_counter_enable();
+	systick_interrupt_enable();
+
 	/* Initialize and test the logger module: */
 	logger_uart_init();
 	LOG("Hello World!\n");
 	LOG("Buld date: %s (%s)\n", __DATE__, __TIME__);
 	LOG("Six args: [ %d, %d, %d, %d, %d, %d ]\n", 10, 20, 30, 40, 50, 60);
 
-	/* Test assertion using some obviously false statement: */
-	assert(0xACAB == false);
+	unsigned int loops = 0;
+	unsigned int i = 0;
 
 	while (1) {
 		logger_process(&logger_uart);
+
+		if (loops < 500000) {
+			loops++;
+		} else {
+			loops = 0;
+			LOG("%s(): i=%d\n", __func__, i);
+			i++;
+		}
 	}
 }
