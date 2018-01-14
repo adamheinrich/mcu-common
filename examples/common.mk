@@ -7,7 +7,7 @@ OPENCM3_DIR = ../lib/libopencm3
 
 INC = -I$(OPENCM3_DIR)/include \
       -L$(OPENCM3_DIR)/lib \
-      -I$(MCU_COMMON_DIR)/inc
+      -I$(MCU_COMMON_DIR)/include
 
 SRC_C = $(wildcard $(MCU_COMMON_DIR)/src/*.c)
 
