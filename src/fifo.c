@@ -29,10 +29,23 @@
  * do so, delete this exception statement from your version.
  */
 
+/** @defgroup fifo_module FIFO
+ *
+ * @brief FIFO (first in, first out) queue implementation
+ */
+
 #include <assert.h>
 #include <mcu-common/fifo.h>
 #include <mcu-common/critical.h>
 
+/**@{*/
+
+/** @brief Initialize FIFO
+ *
+ * @param fifo Pointer to the @ref fifo structure
+ *
+ * @return `true` if initialization succeeds, `false` otherwise
+ */
 bool fifo_init(struct fifo *fifo)
 {
 	assert(fifo != NULL);
@@ -45,6 +58,14 @@ bool fifo_init(struct fifo *fifo)
 	return true;
 }
 
+/** @brief Read data from FIFO
+ *
+ * @param fifo Pointer to the @ref fifo structure
+ * @param[out] dst Pointer where the read data will be stored to
+ * @param count Number of elements to be read
+ *
+ * @return The number of elements actually read (0 to `count`)
+ */
 int fifo_read(struct fifo *fifo, void *dst, int count)
 {
 	assert(fifo != NULL);
@@ -76,6 +97,14 @@ int fifo_read(struct fifo *fifo, void *dst, int count)
 	return n;
 }
 
+/** @brief Write data to FIFO
+ *
+ * @param fifo Pointer to the @ref fifo structure
+ * @param[in] src Pointer to the data written
+ * @param count Number of elements to be written
+ *
+ * @return The number of elements actually written (0 to `count`)
+ */
 int fifo_write(struct fifo *fifo, const void *src, int count)
 {
 	assert(fifo != NULL);
@@ -106,3 +135,5 @@ int fifo_write(struct fifo *fifo, const void *src, int count)
 
 	return n;
 }
+
+/**@}*/

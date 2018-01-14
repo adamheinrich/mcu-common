@@ -29,10 +29,21 @@
  * do so, delete this exception statement from your version.
  */
 
+/** @defgroup critical_defs Critical section macros
+ *
+ * @brief Target-specific critical section macros
+ *
+ * Only ARM Cortex-M (ARMv6-M, ARMv7-M, ARMv7E-M) is currently supported.
+ * For other architectures, the @ref CRITICAL_ENTER and @ref CRITICAL_EXIT
+ * macros expand to empty stubs.
+ */
+
 #ifndef MCU_COMMON_CRITICAL_H
 #define MCU_COMMON_CRITICAL_H
 
 #include <stdint.h>
+
+/**@{*/
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,12 +52,20 @@ extern "C" {
 #if defined(__ARM_ARCH_6M__) || defined(__ARM_ARCH_7M__) || \
     defined(__ARM_ARCH_7EM__)
 
+/** @brief Enter critical section (ARM Cortex-M)
+ *
+ * Must be followed by @ref CRITICAL_EXIT.
+ */
 #define CRITICAL_ENTER() \
 	do { \
 		uint32_t _prm; \
 		__asm__ volatile ("mrs %0, primask" : "=r" (_prm)); \
 		__asm__ volatile ("cpsid i" : : : "memory")
 
+/** @brief Exit critical section (ARM Cortex-M)
+ *
+ * Must be preceded by @ref CRITICAL_ENTER.
+ */
 #define CRITICAL_EXIT() \
 		__asm__ volatile ("msr primask, %0" : : "r" (_prm) : "memory");\
 	} while(0)
@@ -64,5 +83,7 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
+/**@}*/
 
 #endif /* MCU_COMMON_CRITICAL_H */

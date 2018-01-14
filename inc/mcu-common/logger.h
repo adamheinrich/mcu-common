@@ -41,21 +41,54 @@
 extern "C" {
 #endif
 
+/** @brief The maximum number of arguments supported by the implementation
+ * @ingroup logger_module
+ */
 #define LOGGER_MAX_ARGC 6
 
+/** @brief Logger entry (used internally)
+ */
 struct logger_entry {
+	/** @brief Number of arguments in @ref argv
+	 *
+	 * Accepted values are 0 to @ref LOGGER_MAX_ARGC.
+	 */
 	int argc; /* TODO: Packed, uint8_t? */
+	/** @brief Format string to be passed to `fprintf` */
 	const char *fmt;
+	/** @brief Array of arguments to be passed to `fprintf` */
 	unsigned int argv[LOGGER_MAX_ARGC];
 };
 
+/** @brief Logger instance
+ * @ingroup logger_module
+ */
 struct logger {
+	/** @brief Pointer to a stream
+	 * (assigned internally in @ref logger_init) */
 	FILE *fp;
+	/** @brief Write callback to be implemented by a driver
+	  *
+	  * The callback is called from @ref logger_process during deferred
+	  * processing. The callback provides the driver with a string which is
+	  * supposed to be written to the output interface (e.g. serial port).
+	  *
+	  * @param[in] str Pointer to the string to be written (formatted by
+	  * `fprintf`), not null-terminated
+	  * @param length Count of characters to be written
+	  */
 	ssize_t (*write_cb)(const char *str, size_t length);
+	/** @brief Pointer to @ref fifo instance for storing @ref logger_entry
+	 *  entries. */
 	struct fifo *fifo;
+	/** @brief Logger initialized flag (handled internally) */
 	bool initialized;
 };
 
+/** @brief Allocate buffer for the internal @ref fifo_module and initialize
+ * @ref logger instance
+ * @ingroup logger_module
+ */
 #define LOGGER_INIT(log, log_write_cb, log_capacity, log_buffered)	do { \
 		static struct fifo logger_fifo; \
 		FIFO_INIT(&logger_fifo, sizeof(struct logger_entry), \
@@ -65,6 +98,11 @@ struct logger {
 		logger_init((log), (log_buffered)); \
 	} while (0)
 
+/** @brief Log a message (shortcut for @ref logger_put)
+ *
+ * This macro determines the number of arguments (`argc`) automatically.
+ * @ingroup logger_module
+ */
 #define LOGGER_PUT(log, ...) \
 	logger_put((log), VA_ARGC(__VA_ARGS__)-1, __VA_ARGS__)
 

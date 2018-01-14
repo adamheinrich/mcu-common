@@ -39,6 +39,9 @@
 extern "C" {
 #endif
 
+/** @brief Allocate buffer and initialize @ref fifo instance
+ * @ingroup fifo_module
+ */
 #define FIFO_INIT(fifo, elem_size, fifo_capacity)	do { \
 		static char buffer[(elem_size)*(fifo_capacity)]; \
 		(fifo)->buffer = buffer; \
@@ -47,13 +50,27 @@ extern "C" {
 		fifo_init(fifo); \
 	} while (0)
 
+
+/** @brief FIFO instance
+ * @ingroup fifo_module
+ */
 struct fifo {
+	/** @brief Pointer to the buffer used for FIFO
+	 *
+	 * Size of the buffer must be (@ref element_size * @ref capacity).
+	 */
 	volatile void *buffer;
+	/** @brief Size of a single element */
 	size_t element_size;
+	/** @brief Number of elements in FIFO */
 	size_t capacity;
+	/** @brief Read index (handled internally) */
 	volatile size_t tail;
+	/** @brief Write index (handled internally) */
 	volatile size_t head;
+	/** @brief FIFO full flag (handled internally) */
 	volatile bool full;
+	/** @brief FIFO empty flag (handled internally) */
 	volatile bool empty;
 };
 
