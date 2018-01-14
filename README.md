@@ -1,4 +1,4 @@
-# MCU-Common: Useful stuff for MCU programming
+# MCU-Common
 
 MCU-Common is a library which contains modules useful for embedded programming
 (especially for bare-metal microcontroller applications).
