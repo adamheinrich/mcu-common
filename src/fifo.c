@@ -165,4 +165,97 @@ int fifo_write(struct fifo *fifo, const void *src, int count)
 	return n;
 }
 
+/** @brief Read null-terminated string from FIFO
+ *
+ * This function assumes `element_size` equals to one.
+ *
+ * @param fifo Pointer to the @ref fifo structure
+ * @param[out] str Pointer where the string will be stored to
+ *
+ * @return Length of the string read (excluding terminating null-character)
+ */
+int fifo_gets(struct fifo *fifo, char *str)
+{
+	assert(fifo != NULL);
+	assert(fifo->element_size == 1);
+	assert(str != NULL);
+
+	int n = 0;
+
+	CRITICAL_ENTER();
+
+	while (!fifo->full) {
+		str[n] = ((char *)fifo->buffer)[fifo->tail];
+
+		fifo->tail++;
+		if (fifo->tail >= fifo->capacity)
+			fifo->tail = 0;
+
+		if (fifo->tail == fifo->head) {
+			str[n+1] = '\0';
+			fifo->empty = true;
+		}
+
+		if (str[n] == 0)
+			break;
+
+		n++;
+	}
+
+	if (n > 0)
+		fifo->full = false;
+
+	CRITICAL_EXIT();
+
+	return n;
+}
+
+/** @brief Write null-terminated string to FIFO
+ *
+ * This function assumes `element_size` equals to one.
+ *
+ * @param fifo Pointer to the @ref fifo structure
+ * @param[in] str Pointer to the string to be written
+ *
+ * @return Length of the string actually written (excluding terminating
+ * null-character)
+ */
+int fifo_puts(struct fifo *fifo, const char *str)
+{
+	assert(fifo != NULL);
+	assert(fifo->element_size == 1);
+	assert(str != NULL);
+
+	int n = 0;
+
+	CRITICAL_ENTER();
+
+	while (!fifo->full) {
+		char *buffer = &((char *)fifo->buffer)[fifo->head];
+		*buffer = str[n];
+
+		fifo->head++;
+		if (fifo->head >= fifo->capacity)
+			fifo->head = 0;
+
+		if (fifo->head == fifo->tail) {
+			*buffer = '\0';
+			fifo->full = true;
+		}
+
+		if (str[n] == 0)
+			break;
+
+		n++;
+	}
+
+	if (n > 0)
+		fifo->empty = false;
+
+	CRITICAL_EXIT();
+
+	return n;
+}
+
+
 /**@}*/

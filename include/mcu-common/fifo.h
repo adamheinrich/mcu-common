@@ -80,6 +80,9 @@ int fifo_available(const struct fifo *fifo);
 int fifo_read(struct fifo *fifo, void *dst, int count);
 int fifo_write(struct fifo *fifo, const void *src, int count);
 
+int fifo_gets(struct fifo *fifo, char *str);
+int fifo_puts(struct fifo *fifo, const char *str);
+
 #ifdef __cplusplus
 }
 #endif

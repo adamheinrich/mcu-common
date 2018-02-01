@@ -32,7 +32,9 @@
 #include "test_fifo.h"
 #include "test.h"
 #include <stdint.h>
+#include <string.h>
 #include <mcu-common/fifo.h>
+#include <mcu-common/macros.h>
 
 static bool test_fifo_char(void)
 {
@@ -114,6 +116,36 @@ static bool test_fifo_operations(void)
 	return true;
 }
 
+static bool test_fifo_str(void)
+{
+	struct fifo fifo;
+	FIFO_INIT(&fifo, sizeof(char), 128);
+
+	static const char *strings[] = {
+		"A spectre is haunting Europe",
+		"A specre of Communism",
+	};
+
+	size_t clen = 0;
+	for (size_t i = 0; i < ARRAY_SIZE(strings); i++) {
+		const char *str = strings[i];
+		TEST_ASSERT(fifo_puts(&fifo, str) == (int)strlen(str));
+		clen += strlen(str);
+	}
+
+	TEST_ASSERT(fifo_available(&fifo) == (int)(clen+ARRAY_SIZE(strings)));
+
+	static char str[32];
+	for (size_t i = 0; i < ARRAY_SIZE(strings); i++) {
+		TEST_ASSERT(fifo_gets(&fifo, str) == (int)strlen(str));
+		TEST_ASSERT(strcmp(str, strings[i]) == 0);
+	}
+
+	TEST_ASSERT(fifo_gets(&fifo, str) == 0);
+
+	return true;
+}
+
 bool test_fifo(void)
 {
 	bool status = true;
@@ -121,6 +153,7 @@ bool test_fifo(void)
 	status &= TEST_RUN(test_fifo_char);
 	status &= TEST_RUN(test_fifo_uint64);
 	status &= TEST_RUN(test_fifo_operations);
+	status &= TEST_RUN(test_fifo_str);
 
 	return status;
 }
