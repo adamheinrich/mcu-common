@@ -75,6 +75,8 @@ struct fifo {
 };
 
 bool fifo_init(struct fifo *fifo);
+int fifo_available(const struct fifo *fifo);
+
 int fifo_read(struct fifo *fifo, void *dst, int count);
 int fifo_write(struct fifo *fifo, const void *src, int count);
 

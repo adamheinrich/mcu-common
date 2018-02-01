@@ -58,6 +58,35 @@ bool fifo_init(struct fifo *fifo)
 	return true;
 }
 
+/** @brief Get number of elements available to read from FIFO
+ *
+ * @param fifo Pointer to the @ref fifo structure
+ *
+ * @return The number of elements available for read (0 to `fifo.capacity`)
+ */
+int fifo_available(const struct fifo *fifo)
+{
+	assert(fifo != NULL);
+
+	size_t n;
+
+	CRITICAL_ENTER();
+
+	if (fifo->empty) {
+		n = 0;
+	} else if (fifo->full) {
+		n = fifo->capacity;
+	} else if (fifo->head >= fifo->tail) {
+		n = (fifo->head - fifo->tail);
+	} else {
+		n = (fifo->capacity - fifo->tail + fifo->head);
+	}
+
+	CRITICAL_EXIT();
+
+	return (int)n;
+}
+
 /** @brief Read data from FIFO
  *
  * @param fifo Pointer to the @ref fifo structure

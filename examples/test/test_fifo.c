@@ -88,15 +88,19 @@ static bool test_fifo_operations(void)
 
 	FIFO_INIT(&fifo, sizeof(int), 5);
 
+	TEST_ASSERT(fifo_available(&fifo) == 0);
 	TEST_ASSERT(fifo_write(&fifo, in, 5) == 5); /* fifo: { 1, 2, 3, 4, 5 }*/
 
+	TEST_ASSERT(fifo_available(&fifo) == 5);
 	TEST_ASSERT(fifo_read(&fifo, out, 3) == 3); /* fifo: { 4, 5 } */
 	TEST_ASSERT(out[0] == 1);
 	TEST_ASSERT(out[1] == 2);
 	TEST_ASSERT(out[2] == 3);
 
+	TEST_ASSERT(fifo_available(&fifo) == 2);
 	TEST_ASSERT(fifo_write(&fifo, in, 5) == 3); /* fifo: { 4, 5, 1, 2, 3 }*/
 
+	TEST_ASSERT(fifo_available(&fifo) == 5);
 	TEST_ASSERT(fifo_read(&fifo, out, 5) == 5); /* fifo: { } */
 	TEST_ASSERT(out[0] == 4);
 	TEST_ASSERT(out[1] == 5);
@@ -104,6 +108,7 @@ static bool test_fifo_operations(void)
 	TEST_ASSERT(out[3] == 2);
 	TEST_ASSERT(out[4] == 3);
 
+	TEST_ASSERT(fifo_available(&fifo) == 0);
 	TEST_ASSERT(fifo_read(&fifo, out, 5) == 0);
 
 	return true;
