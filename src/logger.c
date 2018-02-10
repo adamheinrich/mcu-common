@@ -29,9 +29,9 @@
  * do so, delete this exception statement from your version.
  */
 
-/** @defgroup logger_module Logger
- *
- * @brief Universal logger module with deferred processing
+/**
+ * @defgroup logger_module Logger
+ * Universal logger module with deferred processing
  */
 
 #define _GNU_SOURCE
@@ -45,13 +45,12 @@
 static ssize_t logger_write(void *cookie, const char *buf, size_t size);
 static int flprintf(FILE *fp, const struct logger_entry *e);
 
-/** @brief Initialize logger
+/**
+ * Initializes logger. If `buffered` is set to true, the logger will use line
+ * buffering (which results in fewer calls to the logger.write_cb() callback
+ * with larger string lengths).
  *
- * If `buffered` is set to true, the logger will use line buffering (which
- * results in fewer calls of the write callback `write_cb()` with larger string
- * lengths).
- *
- * @param log Pointer to the @ref logger structure
+ * @param log Pointer to the #logger structure
  * @param buffered Use line buffering
  *
  * @return `true` if initialization succeeds, `false` otherwise
@@ -86,21 +85,21 @@ bool logger_init(struct logger *log, bool buffered)
 	return true;
 }
 
-/** @brief Log a message
+/**
+ * Logs a message (puts it into internal buffer for later processing).
  *
- * Puts a message into internal buffer. The message consists of a format string
- * and variable number of arguments which will be processed by `fprintf` in
- * @ref logger_process. To deterine the number of arguments (`argc`)
- * automatically, use macro @ref LOGGER_PUT instead.
+ * The message consists of a format string and variable number of arguments
+ * which will be processed by `fprintf` in logger_process(). To determine the
+ * number of arguments (`argc`) automatically, use macro LOGGER_PUT() instead.
  *
- * @param log Pointer to the @ref logger structure
- * @param argc Number of arguments (0 to @ref LOGGER_MAX_ARGC)
+ * @param log Pointer to the #logger structure
+ * @param argc Number of arguments (0 to #LOGGER_MAX_ARGC)
  * @param[in] fmt Format string to be passed to `fprintf`
  * @param ... Optional arguments to be passed to `fprintf` (only `argc`
  * parameters will be processed)
  *
- * @return `true` if initialization succeeds, `false` otherwise (internal
- * @ref fifo_module is full)
+ * @return `true` if initialization succeeds, `false` otherwise
+ * (internal @ref fifo_module is full)
  */
 bool logger_put(const struct logger *log, int argc, const char *fmt, ...)
 {
@@ -125,17 +124,17 @@ bool logger_put(const struct logger *log, int argc, const char *fmt, ...)
 	return (fifo_write(log->fifo, &entry, 1) == 1);
 }
 
-/** @brief Process logged message
+/**
+ * Processes a single logged message from the buffer.
  *
- * Processes a single logged message from the buffer and calls the driver to
- * write it to an actual output interface. This function is meant to defer log
- * processing from high priority contexts and should be therefore called in a
- * low-priority context (e.g. a main loop).
+ * This function calls logger.write_cb callback (implemented by the driver) to
+ * write the message to an actual output interface. It is meant to defer log
+ * processing from high priority contexts (such as interrupts) and should be
+ * therefore called in a low-priority context (e.g. a main loop).
  *
- * @param log Pointer to the @ref logger structure
- *
- * @return `true` if a message has been processed, `false` otherwise (internal
- * @ref fifo_module is empty)
+ * @param log Pointer to the #logger structure
+ * @return `true` if a message has been processed, `false` otherwise
+ * (internal @ref fifo_module is empty)
  */
 bool logger_process(const struct logger *log)
 {

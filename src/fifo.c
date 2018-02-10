@@ -29,9 +29,9 @@
  * do so, delete this exception statement from your version.
  */
 
-/** @defgroup fifo_module FIFO
- *
- * @brief FIFO (first in, first out) queue implementation
+/**
+ * @defgroup fifo_module FIFO
+ * FIFO (first in, first out) queue implementation
  */
 
 #include <assert.h>
@@ -40,10 +40,10 @@
 
 /**@{*/
 
-/** @brief Initialize FIFO
+/**
+ * Initializes FIFO.
  *
- * @param fifo Pointer to the @ref fifo structure
- *
+ * @param fifo Pointer to the #fifo structure
  * @return `true` if initialization succeeds, `false` otherwise
  */
 bool fifo_init(struct fifo *fifo)
@@ -58,11 +58,11 @@ bool fifo_init(struct fifo *fifo)
 	return true;
 }
 
-/** @brief Get number of elements available to read from FIFO
+/**
+ * Returns number of elements available to read from FIFO.
  *
- * @param fifo Pointer to the @ref fifo structure
- *
- * @return The number of elements available for read (0 to `fifo.capacity`)
+ * @param fifo Pointer to the #fifo structure
+ * @return The number of elements available to read (0 to fifo.capacity)
  */
 int fifo_available(const struct fifo *fifo)
 {
@@ -87,9 +87,10 @@ int fifo_available(const struct fifo *fifo)
 	return (int)n;
 }
 
-/** @brief Read data from FIFO
+/**
+ * Reads data from FIFO.
  *
- * @param fifo Pointer to the @ref fifo structure
+ * @param fifo Pointer to the #fifo structure
  * @param[out] dst Pointer where the read data will be stored to
  * @param count Number of elements to be read
  *
@@ -126,9 +127,10 @@ int fifo_read(struct fifo *fifo, void *dst, int count)
 	return n;
 }
 
-/** @brief Write data to FIFO
+/**
+ * Writes data to FIFO.
  *
- * @param fifo Pointer to the @ref fifo structure
+ * @param fifo Pointer to the #fifo structure
  * @param[in] src Pointer to the data written
  * @param count Number of elements to be written
  *
@@ -165,11 +167,11 @@ int fifo_write(struct fifo *fifo, const void *src, int count)
 	return n;
 }
 
-/** @brief Read null-terminated string from FIFO
+/**
+ * Reads null-terminated string from FIFO. This function assumes that
+ * fifo.element_size equals to one.
  *
- * This function assumes `element_size` equals to one.
- *
- * @param fifo Pointer to the @ref fifo structure
+ * @param fifo Pointer to the #fifo structure
  * @param[out] str Pointer where the string will be stored to
  *
  * @return Length of the string read (excluding terminating null-character)
@@ -210,11 +212,11 @@ int fifo_gets(struct fifo *fifo, char *str)
 	return n;
 }
 
-/** @brief Write null-terminated string to FIFO
+/**
+ * Writes null-terminated string to FIFO. This function assumes that
+ * fifo.element_size equals to one.
  *
- * This function assumes `element_size` equals to one.
- *
- * @param fifo Pointer to the @ref fifo structure
+ * @param fifo Pointer to the #fifo structure
  * @param[in] str Pointer to the string to be written
  *
  * @return Length of the string actually written (excluding terminating
@@ -256,6 +258,5 @@ int fifo_puts(struct fifo *fifo, const char *str)
 
 	return n;
 }
-
 
 /**@}*/

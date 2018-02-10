@@ -29,27 +29,24 @@
  * do so, delete this exception statement from your version.
  */
 
-/** @defgroup macros_defs Common macros
- *
- * @brief Common macros
- */
-
 #ifndef MCU_COMMON_MACROS_H
 #define MCU_COMMON_MACROS_H
+
+/**
+ * Common macros
+ * @defgroup macros_defs Common macros
+ */
 
 #define VA_ARGC_IMPL(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, \
 		     a14, a15, a16, n, ...)	(n)
 
 /**@{*/
 
-/** @brief Number of arguments for variadic macros
- *
- * Works for up to 16 arguments.
- */
+/** Number of arguments for variadic macros (works for up to 16 arguments) */
 #define VA_ARGC(...)	VA_ARGC_IMPL(__VA_ARGS__, 16, 15, 14, 13, 12, 11, 10, \
 			9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
 
-/** @brief Size of an array */
+/** Size of an array */
 #define ARRAY_SIZE(x)	(sizeof(x)/sizeof(*(x)))
 
 /**@}*/
