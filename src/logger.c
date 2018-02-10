@@ -50,8 +50,8 @@ static int flprintf(FILE *fp, const struct logger_entry *e);
  * buffering (which results in fewer calls to the logger.write_cb() callback
  * with larger string lengths).
  *
- * @param log Pointer to the #logger structure
- * @param buffered Use line buffering
+ * @param log           Pointer to the #logger structure
+ * @param buffered      Use line buffering
  *
  * @return `true` if initialization succeeds, `false` otherwise
  */
@@ -92,11 +92,11 @@ bool logger_init(struct logger *log, bool buffered)
  * which will be processed by `fprintf` in logger_process(). To determine the
  * number of arguments (`argc`) automatically, use macro LOGGER_PUT() instead.
  *
- * @param log Pointer to the #logger structure
- * @param argc Number of arguments (0 to #LOGGER_MAX_ARGC)
- * @param[in] fmt Format string to be passed to `fprintf`
- * @param ... Optional arguments to be passed to `fprintf` (only `argc`
- * parameters will be processed)
+ * @param log           Pointer to the #logger structure
+ * @param argc          Number of arguments (0 to #LOGGER_MAX_ARGC)
+ * @param[in] fmt       Format string to be passed to `fprintf`
+ * @param ...           Optional arguments to be passed to `fprintf`
+ *                      (only `argc` parameters will be processed)
  *
  * @return `true` if initialization succeeds, `false` otherwise
  * (internal @ref fifo_module is full)
@@ -133,6 +133,7 @@ bool logger_put(const struct logger *log, int argc, const char *fmt, ...)
  * therefore called in a low-priority context (e.g. a main loop).
  *
  * @param log Pointer to the #logger structure
+ *
  * @return `true` if a message has been processed, `false` otherwise
  * (internal @ref fifo_module is empty)
  */

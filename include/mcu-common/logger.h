@@ -70,9 +70,9 @@ struct logger {
 	  * processing. The callback provides the driver with a string which is
 	  * supposed to be written to the output interface (e.g. serial port).
 	  *
-	  * @param[in] str Pointer to the string to be written (formatted by
-	  * `fprintf`), not null-terminated
-	  * @param length Count of characters to be written
+	  * @param[in] str      Pointer to the string to be written
+	  *                     (formatted by `fprintf`), not null-terminated
+	  * @param length       Count of characters to be written
 	  */
 	ssize_t (*write_cb)(const char *str, size_t length);
 	/** Pointer to #fifo instance for storing #logger_entry entries */
@@ -87,12 +87,12 @@ struct logger {
  * Allocates buffer for the internal @ref fifo_module and initializes #logger
  * instance.
  *
- * @param log Pointer to the #logger structure
- * @param log_write_cb Pointer to write callback implemented by driver
- * (see logger.write_cb for details)
- * @param log_capacity Capacity of the internal @ref fifo_module
- * (maximum number of messages to be stored, see fifo.capacity)
- * @param log_buffered Use line buffering (see logger_init() for details)
+ * @param log           Pointer to the #logger structure
+ * @param log_write_cb  Pointer to write callback implemented by driver
+ *                      (see logger.write_cb for details)
+ * @param log_capacity  Capacity of the internal @ref fifo_module (maximum
+ *                      number of messages to be stored, see fifo.capacity)
+ * @param log_buffered  Use line buffering (see logger_init() for details)
  */
 #define LOGGER_INIT(log, log_write_cb, log_capacity, log_buffered) \
 	do { \
@@ -108,9 +108,9 @@ struct logger {
  * Logs a message (shortcut for logger_put() which automatically determines
  * the number of arguments).
  *
- * @param log Pointer to the #logger structure
- * @param ... Format string and up to #LOGGER_MAX_ARGC optional arguments to be
- * passed to `fprintf` (the format string is mandatory).
+ * @param log   Pointer to the #logger structure
+ * @param ...   Format string and up to #LOGGER_MAX_ARGC optional arguments
+ *              to be passed to `fprintf` (the format string is mandatory).
  */
 #define LOGGER_PUT(log, ...) \
 	logger_put((log), VA_ARGC(__VA_ARGS__)-1, __VA_ARGS__)

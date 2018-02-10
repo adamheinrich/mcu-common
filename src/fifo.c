@@ -44,6 +44,7 @@
  * Initializes FIFO.
  *
  * @param fifo Pointer to the #fifo structure
+ *
  * @return `true` if initialization succeeds, `false` otherwise
  */
 bool fifo_init(struct fifo *fifo)
@@ -62,6 +63,7 @@ bool fifo_init(struct fifo *fifo)
  * Returns number of elements available to read from FIFO.
  *
  * @param fifo Pointer to the #fifo structure
+ *
  * @return The number of elements available to read (0 to fifo.capacity)
  */
 int fifo_available(const struct fifo *fifo)
@@ -90,9 +92,9 @@ int fifo_available(const struct fifo *fifo)
 /**
  * Reads data from FIFO.
  *
- * @param fifo Pointer to the #fifo structure
- * @param[out] dst Pointer where the read data will be stored to
- * @param count Number of elements to be read
+ * @param fifo          Pointer to the #fifo structure
+ * @param[out] dst      Pointer where the read data will be stored to
+ * @param count         Number of elements to be read
  *
  * @return The number of elements actually read (0 to `count`)
  */
@@ -130,9 +132,9 @@ int fifo_read(struct fifo *fifo, void *dst, int count)
 /**
  * Writes data to FIFO.
  *
- * @param fifo Pointer to the #fifo structure
- * @param[in] src Pointer to the data written
- * @param count Number of elements to be written
+ * @param fifo          Pointer to the #fifo structure
+ * @param[in] src       Pointer to the data written
+ * @param count         Number of elements to be written
  *
  * @return The number of elements actually written (0 to `count`)
  */
@@ -171,8 +173,8 @@ int fifo_write(struct fifo *fifo, const void *src, int count)
  * Reads null-terminated string from FIFO. This function assumes that
  * fifo.element_size equals to one.
  *
- * @param fifo Pointer to the #fifo structure
- * @param[out] str Pointer where the string will be stored to
+ * @param fifo          Pointer to the #fifo structure
+ * @param[out] str      Pointer where the string will be stored to
  *
  * @return Length of the string read (excluding terminating null-character)
  */
@@ -216,8 +218,8 @@ int fifo_gets(struct fifo *fifo, char *str)
  * Writes null-terminated string to FIFO. This function assumes that
  * fifo.element_size equals to one.
  *
- * @param fifo Pointer to the #fifo structure
- * @param[in] str Pointer to the string to be written
+ * @param fifo          Pointer to the #fifo structure
+ * @param[in] str       Pointer to the string to be written
  *
  * @return Length of the string actually written (excluding terminating
  * null-character)

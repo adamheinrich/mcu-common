@@ -45,8 +45,8 @@ extern "C" {
 /**
  * Allocates buffer and initializes #fifo instance.
  *
- * @param fifo Pointer to the #fifo structure
- * @param elem_size Size of a single element (see fifo.element_size)
+ * @param fifo          Pointer to the #fifo structure
+ * @param elem_size     Size of a single element (see fifo.element_size)
  * @param fifo_capacity Number of elements in FIFO (see fifo.capacity)
  */
 #define FIFO_INIT(fifo, elem_size, fifo_capacity) \
