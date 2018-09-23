@@ -1,3 +1,4 @@
 examples/*/build/
 doc/html/
+doc/deploy.sh
 *.sublime-*
