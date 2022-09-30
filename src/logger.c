@@ -34,7 +34,6 @@
  * Universal logger module with deferred processing
  */
 
-#define _GNU_SOURCE
 #include <assert.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -42,43 +41,24 @@
 
 /**@{*/
 
-static ssize_t logger_write(void *cookie, const char *buf, size_t size);
-static int flprintf(FILE *fp, const struct logger_entry *e);
+static int snprintl(char *s, size_t n, const struct logger_entry *e);
 
 /**
- * Initializes logger. If `buffered` is set to true, the logger will use line
- * buffering (which results in fewer calls to the logger.write_cb() callback
- * with larger string lengths).
+ * Initializes logger.
  *
  * @param log           Pointer to the #logger structure
- * @param buffered      Use line buffering
  *
  * @return `true` if initialization succeeds, `false` otherwise
  */
-bool logger_init(struct logger *log, bool buffered)
+bool logger_init(struct logger *log)
 {
 	assert(log != NULL);
 	assert(log->write_cb != NULL);
 
 	log->initialized = false;
-	cookie_io_functions_t logger_io_fns = {
-		.read  = NULL,
-		.write = &logger_write,
-		.seek  = NULL,
-		.close = NULL,
-	};
 
 	if (!fifo_init(log->fifo))
 		return true;
-
-	log->fp = fopencookie(log, "w", logger_io_fns);
-	if (log->fp == NULL)
-		return false;
-
-	if (buffered)
-		setlinebuf(log->fp);
-	else
-		setbuf(log->fp, NULL);
 
 	log->initialized = true;
 
@@ -89,13 +69,13 @@ bool logger_init(struct logger *log, bool buffered)
  * Logs a message (puts it into internal buffer for later processing).
  *
  * The message consists of a format string and variable number of arguments
- * which will be processed by `fprintf` in logger_process(). To determine the
+ * which will be processed by `sprintf` in logger_process(). To determine the
  * number of arguments (`argc`) automatically, use macro LOGGER_PUT() instead.
  *
  * @param log           Pointer to the #logger structure
  * @param argc          Number of arguments (0 to #LOGGER_MAX_ARGC)
- * @param[in] fmt       Format string to be passed to `fprintf`
- * @param ...           Optional arguments to be passed to `fprintf`
+ * @param[in] fmt       Format string to be passed to `sprintf`
+ * @param ...           Optional arguments to be passed to `sprintf`
  *                      (only `argc` parameters will be processed)
  *
  * @return `true` if initialization succeeds, `false` otherwise
@@ -146,25 +126,22 @@ bool logger_process(const struct logger *log)
 
 	struct logger_entry entry;
 	if (fifo_read(log->fifo, &entry, 1) == 1) {
-		flprintf(log->fp, &entry);
+		int n = snprintl(log->str, log->str_size, &entry);
+		if (n > 0) {
+			size_t len = (size_t)n;
+			if (len > log->str_size)
+				len = log->str_size;
+			log->write_cb(log->str, len);
+		}
 		return true;
 	}
 
 	return false;
 }
 
-static ssize_t logger_write(void *cookie, const char *buf, size_t size)
+static int snprintl(char *s, size_t n, const struct logger_entry *e)
 {
-	assert(cookie != NULL);
-	assert(buf != NULL);
-	assert(((struct logger *)cookie)->write_cb != NULL);
-
-	return ((struct logger *)cookie)->write_cb(buf, size);
-}
-
-static int flprintf(FILE *fp, const struct logger_entry *e)
-{
-	assert(fp != NULL);
+	assert(s != NULL);
 	assert(e != NULL);
 
 	const char *fm = e->fmt;
@@ -172,19 +149,19 @@ static int flprintf(FILE *fp, const struct logger_entry *e)
 
 	switch (e->argc) {
 	case 0:
-		return fprintf(fp, fm);
+		return snprintf(s, n, fm);
 	case 1:
-		return fprintf(fp, fm, a[0]);
+		return snprintf(s, n, fm, a[0]);
 	case 2:
-		return fprintf(fp, fm, a[0], a[1]);
+		return snprintf(s, n, fm, a[0], a[1]);
 	case 3:
-		return fprintf(fp, fm, a[0], a[1], a[2]);
+		return snprintf(s, n, fm, a[0], a[1], a[2]);
 	case 4:
-		return fprintf(fp, fm, a[0], a[1], a[2], a[3]);
+		return snprintf(s, n, fm, a[0], a[1], a[2], a[3]);
 	case 5:
-		return fprintf(fp, fm, a[0], a[1], a[2], a[3], a[4]);
+		return snprintf(s, n, fm, a[0], a[1], a[2], a[3], a[4]);
 	case 6:
-		return fprintf(fp, fm, a[0], a[1], a[2], a[3], a[4], a[5]);
+		return snprintf(s, n, fm, a[0], a[1], a[2], a[3], a[4], a[5]);
 #if (LOGGER_MAX_ARGC > 6)
 	#error "Please define more cases for the given value of LOGGER_MAX_ARGC"
 #endif

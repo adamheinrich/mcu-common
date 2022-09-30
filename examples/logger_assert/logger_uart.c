@@ -84,10 +84,10 @@ static void uart_init(void)
 	usart_enable(USART2);
 }
 
-static int uart_write(const char *str, size_t length)
+static void uart_write(const char *str, size_t length)
 {
-	if (str == NULL || length == 0)
-		return 0;
+	if (!str || !length)
+		return;
 
 	CRITICAL_ENTER();
 
@@ -102,13 +102,11 @@ static int uart_write(const char *str, size_t length)
 	}
 
 	CRITICAL_EXIT();
-
-	return (int)length;
 }
 
 void logger_uart_init(void)
 {
 	uart_init();
 	FIFO_INIT(&tx_fifo, sizeof(char), 1024);
-	LOGGER_INIT(&logger_uart, &uart_write, 64, false);
+	LOGGER_INIT(&logger_uart, &uart_write, 64, 128);
 }

@@ -52,9 +52,9 @@ extern "C" {
 struct logger_entry {
 	/** Number of arguments in #argv (0 to #LOGGER_MAX_ARGC) */
 	int argc;
-	/** Format string to be passed to `fprintf` */
+	/** Format string to be passed to `sprintf` */
 	const char *fmt;
-	/** Array of arguments to be passed to `fprintf` */
+	/** Array of arguments to be passed to `sprintf` */
 	unsigned int argv[LOGGER_MAX_ARGC];
 };
 
@@ -71,37 +71,45 @@ struct logger {
 	  * supposed to be written to the output interface (e.g. serial port).
 	  *
 	  * @param[in] str      Pointer to the string to be written
-	  *                     (formatted by `fprintf`), not null-terminated
+	  *                     (formatted by `sprintf`), not null-terminated
 	  * @param length       Count of characters to be written
 	  */
-	ssize_t (*write_cb)(const char *str, size_t length);
+	void (*write_cb)(const char *str, size_t length);
 	/** Pointer to #fifo instance for storing #logger_entry entries */
 	struct fifo *fifo;
-	/** Pointer to a stream (assigned internally in logger_init()) */
-	FILE *fp;
+	/** Pointer to a buffer used to store string composed by `sprintf`. */
+	char *str;
+	/** Size of the string buffer. */
+	size_t str_size;
 	/** Logger initialized flag (handled internally) */
 	bool initialized;
 };
 
 /**
- * Allocates buffer for the internal @ref fifo_module and initializes #logger
- * instance.
+ * Initializes the #logger instance and allocates its string and
+ * @ref fifo_module buffers.
  *
  * @param log           Pointer to the #logger structure
  * @param log_write_cb  Pointer to write callback implemented by driver
  *                      (see logger.write_cb for details)
  * @param log_capacity  Capacity of the internal @ref fifo_module (maximum
  *                      number of messages to be stored, see fifo.capacity)
- * @param log_buffered  Use line buffering (see logger_init() for details)
+ * @param str_capacity  Capacity of the internal string buffer (should be large
+ *                      enough to store a message composed by `snprintf`, see
+ *                      logger.str and logger.str_size)
  */
-#define LOGGER_INIT(log, log_write_cb, log_capacity, log_buffered) \
+#define LOGGER_INIT(log, log_write_cb, log_capacity, str_capacity) \
 	do { \
 		static struct fifo logger_fifo; \
 		FIFO_INIT(&logger_fifo, sizeof(struct logger_entry), \
 			 (log_capacity)); \
+		static char str[(str_capacity)]; \
 		(log)->fifo = &logger_fifo; \
 		(log)->write_cb = (log_write_cb); \
-		logger_init((log), (log_buffered)); \
+		(log)->str = (str); \
+		(log)->str_size = (str_capacity); \
+		(log)->write_cb = (log_write_cb); \
+		logger_init((log)); \
 	} while (0)
 
 /**
@@ -110,12 +118,12 @@ struct logger {
  *
  * @param log   Pointer to the #logger structure
  * @param ...   Format string and up to #LOGGER_MAX_ARGC optional arguments
- *              to be passed to `fprintf` (the format string is mandatory).
+ *              to be passed to `sprintf` (the format string is mandatory).
  */
 #define LOGGER_PUT(log, ...) \
 	logger_put((log), VA_ARGC(__VA_ARGS__)-1, __VA_ARGS__)
 
-bool logger_init(struct logger *log, bool buffered);
+bool logger_init(struct logger *log);
 bool logger_put(const struct logger *log, int argc, const char *fmt, ...);
 bool logger_process(const struct logger *log);
 
