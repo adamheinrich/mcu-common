@@ -45,7 +45,9 @@ extern "C" {
  * The maximum number of logger_put() arguments supported by the implementation
  * @ingroup logger_module
  */
+#ifndef LOGGER_MAX_ARGC
 #define LOGGER_MAX_ARGC 6
+#endif
 
 /** Logger entry (used internally) */
 /* TODO: Packed, uint8_t for argc? */
