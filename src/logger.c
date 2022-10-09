@@ -38,6 +38,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <mcu-common/logger.h>
+#include <mcu-common/critical.h>
 
 /**@{*/
 
@@ -72,6 +73,9 @@ bool logger_init(struct logger *log)
  * which will be processed by `sprintf` in logger_process(). To determine the
  * number of arguments (`argc`) automatically, use macro LOGGER_PUT() instead.
  *
+ * The access to internal #fifo is protected by a critical section so
+ * logger_put() can be called from multiple threads or interrupt handlers.
+ *
  * @param log           Pointer to the #logger structure
  * @param argc          Number of arguments (0 to #LOGGER_MAX_ARGC)
  * @param[in] fmt       Format string to be passed to `sprintf`
@@ -101,7 +105,13 @@ bool logger_put(const struct logger *log, int argc, const char *fmt, ...)
 		entry.argv[i] = va_arg(args, unsigned int);
 	va_end(args);
 
-	return (fifo_write(log->fifo, &entry, 1) == 1);
+	int n;
+
+	CRITICAL_ENTER();
+	n = fifo_write(log->fifo, &entry, 1);
+	CRITICAL_EXIT();
+
+	return (n == 1);
 }
 
 /**
@@ -111,6 +121,9 @@ bool logger_put(const struct logger *log, int argc, const char *fmt, ...)
  * write the message to an actual output interface. It is meant to defer log
  * processing from high priority contexts (such as interrupts) and should be
  * therefore called in a low-priority context (e.g. a main loop).
+ *
+ * It is assumed this function is called from multiple threads (the internal
+ * #fifo is not protected by any locking mechanism).
  *
  * @param log Pointer to the #logger structure
  *

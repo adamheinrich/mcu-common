@@ -31,12 +31,29 @@
 
 /**
  * @defgroup fifo_module FIFO
+ *
  * FIFO (first in, first out) queue implementation
+ *
+ * The queue is lock-free as long as there is only one consumer and producer
+ * thread (i.e. there cannot be multiple threads writing to the queue or
+ * multiple threads reading from it). Use an appropriate locking mechanism
+ * if there are multiple producers or consumers accessing the queue.
+ *
+ * The lock-free behavior is achieved by having a head index only updated
+ * by the producer and a tail index only updated by the consumer, both in an
+ * "atomic" way where it does not contain invalid intermediary values.
+ * To distinguish between the empty `(head == tail)` and full `(head+1 == tail)`
+ * states, a single element in the internal buffer is sacrificed as a trade-off
+ * for not having a third "full" flag (which would have to be updated by both
+ * consumer and producer, requiring a locking mechanism).
+ *
+ * The implementation is thus not lock-free on architectures where loading or
+ * storing a `size_t` variable (used for the head and tail indexes) takes more
+ * than a single instruction (e.g. 8-bit CPUs).
  */
 
 #include <assert.h>
 #include <mcu-common/fifo.h>
-#include <mcu-common/critical.h>
 
 /**@{*/
 
@@ -53,8 +70,6 @@ bool fifo_init(struct fifo *fifo)
 
 	fifo->head = 0;
 	fifo->tail = 0;
-	fifo->full = false;
-	fifo->empty = true;
 
 	return true;
 }
@@ -64,29 +79,38 @@ bool fifo_init(struct fifo *fifo)
  *
  * @param fifo Pointer to the #fifo structure
  *
- * @return The number of elements available to read (0 to fifo.capacity)
+ * @return The number of elements available to read (0 to #fifo_capacity())
  */
 int fifo_available(const struct fifo *fifo)
 {
 	assert(fifo != NULL);
 
+	size_t head = fifo->head;
+	size_t tail = fifo->tail;
 	size_t n;
 
-	CRITICAL_ENTER();
-
-	if (fifo->empty) {
+	if (head == tail)
 		n = 0;
-	} else if (fifo->full) {
-		n = fifo->capacity;
-	} else if (fifo->head >= fifo->tail) {
-		n = (fifo->head - fifo->tail);
-	} else {
-		n = (fifo->capacity - fifo->tail + fifo->head);
-	}
-
-	CRITICAL_EXIT();
+	else if (head > tail)
+		n = head - tail;
+	else
+		n = fifo->buffer_capacity - tail + head;
 
 	return (int)n;
+}
+
+/**
+ * Returns number of elements the FIFO can hold.
+ *
+ * @param fifo Pointer to the #fifo structure
+ *
+ * @return The maximum number of elements the FIFO can hold
+ */
+int fifo_capacity(const struct fifo *fifo)
+{
+	assert(fifo != NULL);
+
+	return (int)fifo->buffer_capacity-1;
 }
 
 /**
@@ -103,28 +127,26 @@ int fifo_read(struct fifo *fifo, void *dst, int count)
 	assert(fifo != NULL);
 	assert(dst != NULL);
 
-	int n;
+	int n = 0;
 	char *ptr = dst;
+	size_t tail = fifo->tail;
 
-	CRITICAL_ENTER();
+	while (n < count) {
+		if (tail == fifo->head) /* Fifo empty */
+			break;
 
-	for (n = 0; (n < count && !fifo->empty); n++) {
-		size_t i = fifo->tail * fifo->element_size;
+		size_t i = tail * fifo->element_size;
 		for (size_t j = 0; j < fifo->element_size; j++)
 			*(ptr++) = ((char *)fifo->buffer)[i+j];
 
-		fifo->tail++;
-		if (fifo->tail >= fifo->capacity)
-			fifo->tail = 0;
+		if (++tail == fifo->buffer_capacity)
+			tail = 0;
 
-		if (fifo->tail == fifo->head)
-			fifo->empty = true;
+		n++;
 	}
 
-	if (n > 0)
-		fifo->full = false;
-
-	CRITICAL_EXIT();
+	if (n)
+		fifo->tail = tail;
 
 	return n;
 }
@@ -143,28 +165,28 @@ int fifo_write(struct fifo *fifo, const void *src, int count)
 	assert(fifo != NULL);
 	assert(src != NULL);
 
-	int n;
+	int n = 0;
 	const char *ptr = src;
+	size_t head = fifo->head;
 
-	CRITICAL_ENTER();
+	while (n < count) {
+		size_t next_head = head + 1;
+		if (next_head == fifo->buffer_capacity)
+			next_head = 0;
 
-	for (n = 0; (n < count && !fifo->full); n++) {
-		size_t i = fifo->head * fifo->element_size;
+		if (next_head == fifo->tail) /* Fifo full */
+			break;
+
+		size_t i = head * fifo->element_size;
 		for (size_t j = 0; j < fifo->element_size; j++)
 			((char *)fifo->buffer)[i+j] = *(ptr++);
 
-		fifo->head++;
-		if (fifo->head >= fifo->capacity)
-			fifo->head = 0;
-
-		if (fifo->head == fifo->tail)
-			fifo->full = true;
+		head = next_head;
+		n++;
 	}
 
-	if (n > 0)
-		fifo->empty = false;
-
-	CRITICAL_EXIT();
+	if (n)
+		fifo->head = head;
 
 	return n;
 }
@@ -181,35 +203,25 @@ int fifo_write(struct fifo *fifo, const void *src, int count)
 int fifo_gets(struct fifo *fifo, char *str)
 {
 	assert(fifo != NULL);
-	assert(fifo->element_size == 1);
 	assert(str != NULL);
 
 	int n = 0;
+	size_t tail = fifo->tail;
 
-	CRITICAL_ENTER();
+	while (tail != fifo->head) {
+		str[n] = ((char *)fifo->buffer)[tail];
 
-	while (!fifo->full) {
-		str[n] = ((char *)fifo->buffer)[fifo->tail];
+		if (++tail == fifo->buffer_capacity)
+			tail = 0;
 
-		fifo->tail++;
-		if (fifo->tail >= fifo->capacity)
-			fifo->tail = 0;
-
-		if (fifo->tail == fifo->head) {
-			str[n+1] = '\0';
-			fifo->empty = true;
-		}
-
-		if (str[n] == 0)
+		if (!str[n])
 			break;
 
 		n++;
 	}
 
-	if (n > 0)
-		fifo->full = false;
-
-	CRITICAL_EXIT();
+	str[n] = '\0';
+	fifo->tail = tail;
 
 	return n;
 }
@@ -227,36 +239,36 @@ int fifo_gets(struct fifo *fifo, char *str)
 int fifo_puts(struct fifo *fifo, const char *str)
 {
 	assert(fifo != NULL);
-	assert(fifo->element_size == 1);
 	assert(str != NULL);
 
 	int n = 0;
+	char *lastptr = NULL;
+	size_t head = fifo->head;
 
-	CRITICAL_ENTER();
+	while (true) {
+		size_t next_head = head + 1;
+		if (next_head == fifo->buffer_capacity)
+			next_head = 0;
 
-	while (!fifo->full) {
-		char *buffer = &((char *)fifo->buffer)[fifo->head];
-		*buffer = str[n];
-
-		fifo->head++;
-		if (fifo->head >= fifo->capacity)
-			fifo->head = 0;
-
-		if (fifo->head == fifo->tail) {
-			*buffer = '\0';
-			fifo->full = true;
+		if (next_head == fifo->tail) { /* Fifo full */
+			if (lastptr) {
+				*lastptr = '\0';
+				n--;
+			}
+			break;
 		}
 
-		if (str[n] == 0)
+		lastptr = &((char *)fifo->buffer)[head];
+		*lastptr = str[n];
+		head = next_head;
+
+		if (!str[n])
 			break;
 
 		n++;
 	}
 
-	if (n > 0)
-		fifo->empty = false;
-
-	CRITICAL_EXIT();
+	fifo->head = head;
 
 	return n;
 }

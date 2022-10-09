@@ -47,14 +47,14 @@ extern "C" {
  *
  * @param fifo          Pointer to the #fifo structure
  * @param elem_size     Size of a single element (see fifo.element_size)
- * @param fifo_capacity Number of elements in FIFO (see fifo.capacity)
+ * @param fifo_capacity Maximum number of elements in FIFO
  */
 #define FIFO_INIT(fifo, elem_size, fifo_capacity) \
 	do { \
-		static char buffer[(elem_size)*(fifo_capacity)]; \
+		static char buffer[(elem_size)*((fifo_capacity)+1)]; \
 		(fifo)->buffer = buffer; \
 		(fifo)->element_size = (elem_size); \
-		(fifo)->capacity = (fifo_capacity); \
+		(fifo)->buffer_capacity = (fifo_capacity)+1; \
 		fifo_init(fifo); \
 	} while (0)
 
@@ -62,24 +62,23 @@ extern "C" {
 /** FIFO instance */
 struct fifo {
 	/** Pointer to the buffer holding FIFO elements.
-	Its size must be (#element_size * #capacity) bytes. */
-	volatile void *buffer;
+	 Its size must be (#element_size * #buffer_capacity) bytes. */
+	void *buffer;
 	/** Size of a single element */
 	size_t element_size;
-	/** Number of elements in FIFO */
-	size_t capacity;
+	/** Number of elements the buffer can hold
+	 (The actual capacity of the FIFO is `buffer_capacity-1` as one element
+	 is wasted for lock-free operation) */
+	size_t buffer_capacity;
 	/** Read index (handled internally) */
 	volatile size_t tail;
 	/** Write index (handled internally) */
 	volatile size_t head;
-	/** FIFO full flag (handled internally) */
-	volatile bool full;
-	/** FIFO empty flag (handled internally) */
-	volatile bool empty;
 };
 
 bool fifo_init(struct fifo *fifo);
 int fifo_available(const struct fifo *fifo);
+int fifo_capacity(const struct fifo *fifo);
 
 int fifo_read(struct fifo *fifo, void *dst, int count);
 int fifo_write(struct fifo *fifo, const void *src, int count);
