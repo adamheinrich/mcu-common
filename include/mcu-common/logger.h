@@ -126,7 +126,8 @@ struct logger {
 	logger_put((log), VA_ARGC(__VA_ARGS__)-1, __VA_ARGS__)
 
 bool logger_init(struct logger *log);
-bool logger_put(const struct logger *log, int argc, const char *fmt, ...);
+bool logger_put(const struct logger *log, int argc, const char *fmt, ...)
+		__attribute__((format (printf, 3, 4)));
 bool logger_process(const struct logger *log);
 
 /**@}*/
