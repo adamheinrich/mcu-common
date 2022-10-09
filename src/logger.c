@@ -59,10 +59,9 @@ bool logger_init(struct logger *log)
 	log->initialized = false;
 
 	if (!fifo_init(log->fifo))
-		return true;
+		return false;
 
 	log->initialized = true;
-
 	return true;
 }
 
