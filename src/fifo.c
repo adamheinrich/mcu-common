@@ -67,6 +67,9 @@
 bool fifo_init(struct fifo *fifo)
 {
 	assert(fifo != NULL);
+	assert(fifo->buffer != NULL);
+	assert(fifo->element_size > 0);
+	assert(fifo->buffer_capacity > 1);
 
 	fifo->head = 0;
 	fifo->tail = 0;
