@@ -92,10 +92,10 @@ static void uart_write(const char *str, size_t length)
 	CRITICAL_ENTER();
 
 	if (tx_pending) {
-		fifo_write(&tx_fifo, str, (int)length);
+		fifo_write(&tx_fifo, str, length);
 	} else {
 		if (length > 1)
-			fifo_write(&tx_fifo, &str[1], (int)length-1);
+			fifo_write(&tx_fifo, &str[1], length-1);
 		tx_pending = true;
 		usart_send(USART2, str[0]);
 		usart_enable_tx_interrupt(USART2);

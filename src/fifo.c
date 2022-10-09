@@ -84,22 +84,19 @@ bool fifo_init(struct fifo *fifo)
  *
  * @return The number of elements available to read (0 to #fifo_capacity())
  */
-int fifo_available(const struct fifo *fifo)
+size_t fifo_available(const struct fifo *fifo)
 {
 	assert(fifo != NULL);
 
 	size_t head = fifo->head;
 	size_t tail = fifo->tail;
-	size_t n;
 
 	if (head == tail)
-		n = 0;
+		return 0;
 	else if (head > tail)
-		n = head - tail;
+		return head - tail;
 	else
-		n = fifo->buffer_capacity - tail + head;
-
-	return (int)n;
+		return fifo->buffer_capacity - tail + head;
 }
 
 /**
@@ -109,11 +106,11 @@ int fifo_available(const struct fifo *fifo)
  *
  * @return The maximum number of elements the FIFO can hold
  */
-int fifo_capacity(const struct fifo *fifo)
+size_t fifo_capacity(const struct fifo *fifo)
 {
 	assert(fifo != NULL);
 
-	return (int)fifo->buffer_capacity-1;
+	return fifo->buffer_capacity-1;
 }
 
 /**
@@ -125,12 +122,12 @@ int fifo_capacity(const struct fifo *fifo)
  *
  * @return The number of elements actually read (0 to `count`)
  */
-int fifo_read(struct fifo *fifo, void *dst, int count)
+size_t fifo_read(struct fifo *fifo, void *dst, size_t count)
 {
 	assert(fifo != NULL);
 	assert(dst != NULL);
 
-	int n = 0;
+	size_t n = 0;
 	char *ptr = dst;
 	size_t tail = fifo->tail;
 
@@ -163,12 +160,12 @@ int fifo_read(struct fifo *fifo, void *dst, int count)
  *
  * @return The number of elements actually written (0 to `count`)
  */
-int fifo_write(struct fifo *fifo, const void *src, int count)
+size_t fifo_write(struct fifo *fifo, const void *src, size_t count)
 {
 	assert(fifo != NULL);
 	assert(src != NULL);
 
-	int n = 0;
+	size_t n = 0;
 	const char *ptr = src;
 	size_t head = fifo->head;
 
@@ -203,12 +200,12 @@ int fifo_write(struct fifo *fifo, const void *src, int count)
  *
  * @return Length of the string read (excluding terminating null-character)
  */
-int fifo_gets(struct fifo *fifo, char *str)
+size_t fifo_gets(struct fifo *fifo, char *str)
 {
 	assert(fifo != NULL);
 	assert(str != NULL);
 
-	int n = 0;
+	size_t n = 0;
 	size_t tail = fifo->tail;
 
 	while (tail != fifo->head) {
@@ -239,12 +236,12 @@ int fifo_gets(struct fifo *fifo, char *str)
  * @return Length of the string actually written (excluding terminating
  * null-character)
  */
-int fifo_puts(struct fifo *fifo, const char *str)
+size_t fifo_puts(struct fifo *fifo, const char *str)
 {
 	assert(fifo != NULL);
 	assert(str != NULL);
 
-	int n = 0;
+	size_t n = 0;
 	char *lastptr = NULL;
 	size_t head = fifo->head;
 

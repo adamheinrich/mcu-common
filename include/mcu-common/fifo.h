@@ -77,14 +77,14 @@ struct fifo {
 };
 
 bool fifo_init(struct fifo *fifo);
-int fifo_available(const struct fifo *fifo);
-int fifo_capacity(const struct fifo *fifo);
+size_t fifo_available(const struct fifo *fifo);
+size_t fifo_capacity(const struct fifo *fifo);
 
-int fifo_read(struct fifo *fifo, void *dst, int count);
-int fifo_write(struct fifo *fifo, const void *src, int count);
+size_t fifo_read(struct fifo *fifo, void *dst, size_t count);
+size_t fifo_write(struct fifo *fifo, const void *src, size_t count);
 
-int fifo_gets(struct fifo *fifo, char *str);
-int fifo_puts(struct fifo *fifo, const char *str);
+size_t fifo_gets(struct fifo *fifo, char *str);
+size_t fifo_puts(struct fifo *fifo, const char *str);
 
 /**@}*/
 

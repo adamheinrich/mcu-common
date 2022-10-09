@@ -64,7 +64,7 @@ static bool test_fifo_uint64(void)
 	struct fifo fifo;
 	FIFO_INIT(&fifo, sizeof(uint64_t), 48);
 
-	for (int i = 0; i < fifo_capacity(&fifo); i++) {
+	for (size_t i = 0; i < fifo_capacity(&fifo); i++) {
 		val = (1UL << i);
 		TEST_ASSERT(fifo_write(&fifo, &val, 1) == 1);
 	}
@@ -72,7 +72,7 @@ static bool test_fifo_uint64(void)
 	val = 0;
 	TEST_ASSERT(fifo_write(&fifo, &val, 1) == 0);
 
-	for (int i = 0; i < fifo_capacity(&fifo); i++) {
+	for (size_t i = 0; i < fifo_capacity(&fifo); i++) {
 		TEST_ASSERT(fifo_read(&fifo, &val, 1) == 1);
 		TEST_ASSERT(val == (1UL << i));
 	}
@@ -130,29 +130,29 @@ static bool test_fifo_str(void)
 
 	TEST_ASSERT(fifo_available(&fifo) == 0);
 
-	TEST_ASSERT(fifo_puts(&fifo, lines[0]) == (int)strlen(lines[0]));
-	TEST_ASSERT(fifo_puts(&fifo, lines[1]) == (int)strlen(lines[1]));
+	TEST_ASSERT(fifo_puts(&fifo, lines[0]) == strlen(lines[0]));
+	TEST_ASSERT(fifo_puts(&fifo, lines[1]) == strlen(lines[1]));
 
 	size_t len12 = strlen(lines[0]) + strlen(lines[1]) + 2;
-	TEST_ASSERT(fifo_available(&fifo) == (int)len12);
+	TEST_ASSERT(fifo_available(&fifo) == len12);
 
 	TEST_ASSERT(fifo_puts(&fifo, lines[2]) == 11); /* "the spectre" */
 
 	static char str[32];
 	for (size_t i = 0; i < 2; i++) {
-		TEST_ASSERT(fifo_gets(&fifo, str) == (int)strlen(str));
+		TEST_ASSERT(fifo_gets(&fifo, str) == strlen(str));
 		TEST_ASSERT(strcmp(str, lines[i]) == 0);
 	}
 
 	TEST_ASSERT(fifo_available(&fifo) == 12); /* "the spectre" + '\0' */
 
-	TEST_ASSERT(fifo_puts(&fifo, lines[0]) == (int)strlen(lines[0]));
-	TEST_ASSERT(fifo_puts(&fifo, lines[1]) == (int)strlen(lines[1]));
+	TEST_ASSERT(fifo_puts(&fifo, lines[0]) == strlen(lines[0]));
+	TEST_ASSERT(fifo_puts(&fifo, lines[1]) == strlen(lines[1]));
 	TEST_ASSERT(fifo_available(&fifo) == fifo_capacity(&fifo));
 
 	int idx[] = { 2, 0, 1 };
 	for (size_t i = 0; i < 3; i++) {
-		TEST_ASSERT(fifo_gets(&fifo, str) == (int)strlen(str));
+		TEST_ASSERT(fifo_gets(&fifo, str) == strlen(str));
 
 		if (i == 0)
 			TEST_ASSERT(strcmp(str, "the spectre") == 0);

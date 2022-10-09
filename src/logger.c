@@ -105,7 +105,7 @@ bool logger_put(const struct logger *log, int argc, const char *fmt, ...)
 		entry.argv[i] = va_arg(args, unsigned int);
 	va_end(args);
 
-	int n;
+	size_t n;
 
 	CRITICAL_ENTER();
 	n = fifo_write(log->fifo, &entry, 1);
