@@ -77,8 +77,10 @@ struct fifo {
 };
 
 bool fifo_init(struct fifo *fifo);
-size_t fifo_available(const struct fifo *fifo);
+
 size_t fifo_capacity(const struct fifo *fifo);
+size_t fifo_readable(const struct fifo *fifo);
+size_t fifo_writable(const struct fifo *fifo);
 
 size_t fifo_read(struct fifo *fifo, void *dst, size_t count);
 size_t fifo_write(struct fifo *fifo, const void *src, size_t count);

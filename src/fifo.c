@@ -78,13 +78,27 @@ bool fifo_init(struct fifo *fifo)
 }
 
 /**
- * Returns number of elements available to read from FIFO.
+ * Returns number of elements the FIFO can hold.
+ *
+ * @param fifo Pointer to the #fifo structure
+ *
+ * @return The maximum number of elements the FIFO can hold
+ */
+size_t fifo_capacity(const struct fifo *fifo)
+{
+	assert(fifo != NULL);
+
+	return fifo->buffer_capacity-1;
+}
+
+/**
+ * Returns number of elements which can be read from the FIFO.
  *
  * @param fifo Pointer to the #fifo structure
  *
  * @return The number of elements available to read (0 to #fifo_capacity())
  */
-size_t fifo_available(const struct fifo *fifo)
+size_t fifo_readable(const struct fifo *fifo)
 {
 	assert(fifo != NULL);
 
@@ -100,17 +114,23 @@ size_t fifo_available(const struct fifo *fifo)
 }
 
 /**
- * Returns number of elements the FIFO can hold.
+ * Returns number of elements which can be written to the FIFO.
  *
  * @param fifo Pointer to the #fifo structure
  *
- * @return The maximum number of elements the FIFO can hold
+ * @return The number of elements available to write (0 to #fifo_capacity())
  */
-size_t fifo_capacity(const struct fifo *fifo)
+size_t fifo_writable(const struct fifo *fifo)
 {
 	assert(fifo != NULL);
 
-	return fifo->buffer_capacity-1;
+	size_t head = fifo->head;
+	size_t tail = fifo->tail;
+
+	if (head < tail)
+		return tail - head - 1;
+	else
+		return fifo->buffer_capacity - head + tail - 1;
 }
 
 /**

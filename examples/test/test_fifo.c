@@ -90,19 +90,23 @@ static bool test_fifo_operations(void)
 
 	FIFO_INIT(&fifo, sizeof(int), 5);
 
-	TEST_ASSERT(fifo_available(&fifo) == 0);
+	TEST_ASSERT(fifo_readable(&fifo) == 0);
+	TEST_ASSERT(fifo_writable(&fifo) == 5);
 	TEST_ASSERT(fifo_write(&fifo, in, 5) == 5); /* fifo: { 1, 2, 3, 4, 5 }*/
 
-	TEST_ASSERT(fifo_available(&fifo) == 5);
+	TEST_ASSERT(fifo_readable(&fifo) == 5);
+	TEST_ASSERT(fifo_writable(&fifo) == 0);
 	TEST_ASSERT(fifo_read(&fifo, out, 3) == 3); /* fifo: { 4, 5 } */
 	TEST_ASSERT(out[0] == 1);
 	TEST_ASSERT(out[1] == 2);
 	TEST_ASSERT(out[2] == 3);
 
-	TEST_ASSERT(fifo_available(&fifo) == 2);
+	TEST_ASSERT(fifo_readable(&fifo) == 2);
+	TEST_ASSERT(fifo_writable(&fifo) == 3);
 	TEST_ASSERT(fifo_write(&fifo, in, 5) == 3); /* fifo: { 4, 5, 1, 2, 3 }*/
 
-	TEST_ASSERT(fifo_available(&fifo) == 5);
+	TEST_ASSERT(fifo_readable(&fifo) == 5);
+	TEST_ASSERT(fifo_writable(&fifo) == 0);
 	TEST_ASSERT(fifo_read(&fifo, out, 5) == 5); /* fifo: { } */
 	TEST_ASSERT(out[0] == 4);
 	TEST_ASSERT(out[1] == 5);
@@ -110,7 +114,8 @@ static bool test_fifo_operations(void)
 	TEST_ASSERT(out[3] == 2);
 	TEST_ASSERT(out[4] == 3);
 
-	TEST_ASSERT(fifo_available(&fifo) == 0);
+	TEST_ASSERT(fifo_readable(&fifo) == 0);
+	TEST_ASSERT(fifo_writable(&fifo) == 5);
 	TEST_ASSERT(fifo_read(&fifo, out, 5) == 0);
 
 	return true;
@@ -118,23 +123,26 @@ static bool test_fifo_operations(void)
 
 static bool test_fifo_str(void)
 {
-	struct fifo fifo;
-	FIFO_INIT(&fifo, sizeof(char), 46);
-
 	static const char *lines[] = {
 		"A spectre is haunting Europe",	/* 29+1 */
 		" -- ",				/* 4+1 */
 		"the spectre of communism.",	/* 25+1 */
 	};
 
+	struct fifo fifo;
+	FIFO_INIT(&fifo, sizeof(char), 46);
 
-	TEST_ASSERT(fifo_available(&fifo) == 0);
+	size_t capacity = fifo_capacity(&fifo);
+
+	TEST_ASSERT(fifo_readable(&fifo) == 0);
+	TEST_ASSERT(fifo_writable(&fifo) == capacity);
 
 	TEST_ASSERT(fifo_puts(&fifo, lines[0]) == strlen(lines[0]));
 	TEST_ASSERT(fifo_puts(&fifo, lines[1]) == strlen(lines[1]));
 
 	size_t len12 = strlen(lines[0]) + strlen(lines[1]) + 2;
-	TEST_ASSERT(fifo_available(&fifo) == len12);
+	TEST_ASSERT(fifo_readable(&fifo) == len12);
+	TEST_ASSERT(fifo_writable(&fifo) == capacity - len12);
 
 	TEST_ASSERT(fifo_puts(&fifo, lines[2]) == 11); /* "the spectre" */
 
@@ -144,11 +152,13 @@ static bool test_fifo_str(void)
 		TEST_ASSERT(strcmp(str, lines[i]) == 0);
 	}
 
-	TEST_ASSERT(fifo_available(&fifo) == 12); /* "the spectre" + '\0' */
+	TEST_ASSERT(fifo_readable(&fifo) == 12); /* "the spectre" + '\0' */
+	TEST_ASSERT(fifo_writable(&fifo) == capacity-12);
 
 	TEST_ASSERT(fifo_puts(&fifo, lines[0]) == strlen(lines[0]));
 	TEST_ASSERT(fifo_puts(&fifo, lines[1]) == strlen(lines[1]));
-	TEST_ASSERT(fifo_available(&fifo) == fifo_capacity(&fifo));
+	TEST_ASSERT(fifo_readable(&fifo) == capacity);
+	TEST_ASSERT(fifo_writable(&fifo) == 0);
 
 	int idx[] = { 2, 0, 1 };
 	for (size_t i = 0; i < 3; i++) {
@@ -160,7 +170,8 @@ static bool test_fifo_str(void)
 			TEST_ASSERT(strcmp(str, lines[idx[i]]) == 0);
 	}
 
-	TEST_ASSERT(fifo_available(&fifo) == 0);
+	TEST_ASSERT(fifo_readable(&fifo) == 0);
+	TEST_ASSERT(fifo_writable(&fifo) == capacity);
 
 	return true;
 }
