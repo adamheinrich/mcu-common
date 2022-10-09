@@ -64,7 +64,7 @@ extern "C" {
 		__asm__ volatile ("cpsid i" ::: "memory")
 
 /**
- * Exit critical section (ARM Cortex-M).
+ * Exits critical section (ARM Cortex-M).
  * Must be preceded by CRITICAL_ENTER().
  */
 #define CRITICAL_EXIT() \
