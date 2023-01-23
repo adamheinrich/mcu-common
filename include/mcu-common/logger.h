@@ -34,6 +34,7 @@
 
 #include <stdbool.h>
 #include <stdio.h>
+#include <inttypes.h>
 #include <mcu-common/macros.h>
 #include <mcu-common/fifo.h>
 
